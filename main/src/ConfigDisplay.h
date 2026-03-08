@@ -23,6 +23,10 @@
 #include "RM67162.h"
 #elif defined(USE_GFXP4)
 #include "GfxP4.hpp"
+#elif defined(USE_GFXMCH22)
+#include "GfxMCH22.hpp"
+#else
+#error No display configuration
 #endif
 
 struct ConfigDisplay {
@@ -38,6 +42,10 @@ struct ConfigDisplay {
 #elif defined(USE_GFXP4)
     ConfigDisplay() {
         displayDriver = new GfxP4();
+    }
+#elif defined(USE_GFXMCH22)
+    ConfigDisplay() {
+        displayDriver = new GfxMCH22();
     }
 #endif
 };

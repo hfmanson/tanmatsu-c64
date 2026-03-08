@@ -17,6 +17,7 @@
 #include "VIC.hpp"
 #include <cstdint>
 #include <cstring>
+#include <esp_log.h>
 #include "DisplayDriver.hpp"
 #include "esp_attr.h"
 #include "esp_heap_caps.h"
@@ -664,6 +665,8 @@ void VIC::initLCDController()
     configDisplay.displayDriver->init();
 }
 
+static const char* TAG = "VIC";
+
 void VIC::init(uint8_t* ram, uint8_t* charrom, SID* sid)
 {
     if (bitmap != nullptr) {
@@ -675,13 +678,16 @@ void VIC::init(uint8_t* ram, uint8_t* charrom, SID* sid)
     this->sid   = sid;
 
     // allocate bitmap memory to be transfered to LCD
+    ESP_LOGI(TAG, "before heap_caps_calloc");
     bitmap       = (uint16_t*)heap_caps_calloc(320 * (200 + 8), sizeof(uint16_t), MALLOC_CAP_DMA | MALLOC_CAP_SPIRAM);
+    ESP_LOGI(TAG, "bitmap: %p", bitmap);
     // field is 200 Active + (50 - 16) + (276 - 250) = 260
     // Starts at line 16 ends at 276
     bordercolors = (uint16_t*)heap_caps_calloc(260, sizeof(uint16_t), MALLOC_CAP_DMA | MALLOC_CAP_SPIRAM);
 
     // div init
     colormap                = new uint8_t[1024]();
+    ESP_LOGI(TAG, "colormap: %p", colormap);
     tftColorFromC64ColorArr = configDisplay.displayDriver->getC64Colors();
     initVarsAndRegs();
 }

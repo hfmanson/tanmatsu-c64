@@ -25,8 +25,8 @@
 #define PAL_FRAMERATE      50.1245419
 #define PAL_TO_NTSC_RATIO  PAL_FRAMERATE / 60.0
 
-#define BOARD_KONSOOL
-
+//#define BOARD_KONSOOL
+#define BOARD_MCH22
 
 struct Config {
 
@@ -56,6 +56,12 @@ struct Config {
     static const gpio_num_t JOYSTICK_UP       = GPIO_NUM_4;   // MTMS GPIO_4
     static const gpio_num_t JOYSTICK_DOWN     = GPIO_NUM_15;  // SAO_IO1 GPIO_15
     static const gpio_num_t JOYSTICK_FIRE_PIN = GPIO_NUM_13;  // SAO_SCL GPIO_13
+#elif defined(BOARD_MCH22)
+#define USE_GFXMCH22
+#define SD_CARD_MOUNT_POINT "/sdcard"
+#define SD_CARD_PRG_PATH SD_CARD_MOUNT_POINT "/c64prg"
+#else
+#error No board configuration
 #endif
 
     // resolution of system timer (throttling 6502 CPU, get BLE KB codes)

@@ -6,9 +6,10 @@ idf_component_register(
 		"src/CPU6502.cpp"
 		"src/CPUC64.cpp"
 		"src/ExternalCmds.cpp"
-		"src/Joystick.cpp"
+#		"src/Joystick.cpp"
 		"src/KonsoolKB.cpp"
-		"src/GfxP4.cpp"
+#		"src/GfxP4.cpp"
+		"src/GfxMCH22.cpp"
 		"src/SDCard.cpp"
 		"src/VIC.cpp"
 		"src/konsoolled.cpp"
@@ -33,7 +34,7 @@ idf_component_register(
 
 # add_subdirectory(src)
 
-target_compile_options(${COMPONENT_LIB} PRIVATE -std=gnu++11)
+target_compile_options(${COMPONENT_LIB} PRIVATE -std=gnu++11 -fexceptions)
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")

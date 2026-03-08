@@ -82,6 +82,7 @@ uint8_t CPUC64::getMem(uint16_t addr) {
         }
         // ** CIA 1 **
         else if (addr <= 0xdcff) {
+#ifdef USE_JOYSTICK			
             kbjoystickmode = menuDataStore->getInt("kb_joystick_port", 0);
             uint8_t ciaidx = (addr - 0xdc00) % 0x10;
             if (ciaidx == 0x00) {
@@ -136,6 +137,10 @@ uint8_t CPUC64::getMem(uint16_t addr) {
                 return (cia1.ciaReg[0x01] | ~ddrb) & input;
             }
             return cia1.getCommonCIAReg(ciaidx);
+#else
+            return 0;
+#endif
+			
         }
         // ** CIA 2 **
         else if (addr <= 0xddff) {
@@ -551,12 +556,13 @@ void CPUC64::init(uint8_t* ram, uint8_t* charrom, VIC* vic, C64Emu* c64emu) {
     deactivateCIA2       = false;
     numofcycles          = 0;
     numofcyclespersecond = 0;
+#ifdef USE_JOYSTICK	
     try {
         joystick.init();
     } catch (const JoystickInitializationException& e) {
         ESP_LOGI(TAG, "error in init. of joystick: %s - continue anyway", e.what());
     }
-
+#endif
     // Setup refresh rate semaphore
     frameRateMutex = xSemaphoreCreateBinary();
 

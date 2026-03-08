@@ -6,6 +6,7 @@ extern "C" {
 }
 
 void KonsoleLED::init() {
+#ifdef USE_LED	
     // initialize LEDs
     ESP_ERROR_CHECK(bsp_led_initialize());
 
@@ -14,14 +15,19 @@ void KonsoleLED::init() {
         set_led_color(i, 0x000000);  // Black
     }
     show_led_colors();
+#endif	
 }
 
 void KonsoleLED::set_led_color(uint8_t led, uint32_t color) {
+#ifdef USE_LED	
     led_buffer[led * 3 + 0] = (color >> 8) & 0xFF;   // G
     led_buffer[led * 3 + 1] = (color >> 16) & 0xFF;  // R
     led_buffer[led * 3 + 2] = (color >> 0) & 0xFF;   // B
+#endif	
 }
 
 void KonsoleLED::show_led_colors() {
+#ifdef USE_LED	
     ESP_ERROR_CHECK(bsp_led_write(led_buffer, sizeof(led_buffer)));
+#endif	
 }

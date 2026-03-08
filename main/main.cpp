@@ -77,14 +77,14 @@ void setup()
         }
     }
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-    ESP_LOGI(TAG, "Setup TE refresh interrupt");
-    ESP_ERROR_CHECK(bsp_display_set_tearing_effect_mode(BSP_DISPLAY_TE_V_BLANKING));
+    //ESP_LOGI(TAG, "Setup TE refresh interrupt");
+    //ESP_ERROR_CHECK(bsp_display_set_tearing_effect_mode(BSP_DISPLAY_TE_V_BLANKING));
     ESP_LOGI(TAG, "setup done");
 }
 
 extern "C" void app_main(void)
 {
-    SemaphoreHandle_t semaphore      = NULL;
+    //SemaphoreHandle_t semaphore      = NULL;
     SemaphoreHandle_t frameRateMutex = NULL;
 
     // Start the GPIO interrupt service
@@ -102,7 +102,7 @@ extern "C" void app_main(void)
     ESP_ERROR_CHECK(bsp_device_initialize());
     setup();  // Initialize the C64 emulator and the display driver
 
-    bsp_display_get_tearing_effect_semaphore(&semaphore);
+   // bsp_display_get_tearing_effect_semaphore(&semaphore);
 
     float to50hz = 0;
 
@@ -112,11 +112,11 @@ extern "C" void app_main(void)
     // Main loop outputs C64 screen contents to the display
     while (true) {
         // Wait for display refresh signal
-        xSemaphoreTake(semaphore, 100 / portTICK_PERIOD_MS);
-
+        //xSemaphoreTake(semaphore, 100 / portTICK_PERIOD_MS);
+		vTaskDelay(1);
         // We only want 50Hz output, so we'll skip some frames
         if (to50hz > 1.0) {
-            c64Emu.loop();
+			c64Emu.loop();
             xSemaphoreGive(frameRateMutex);
             to50hz -= 1.0;
         }

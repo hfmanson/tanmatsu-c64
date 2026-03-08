@@ -50,6 +50,7 @@ union MonoToStereo {
 
 esp_err_t I2S::write(const int16_t* data, size_t size)
 {
+#ifdef HFM	
     size_t          bytes_written;
     static uint32_t stereo_sample;
     assert(sizeof(i2s_stereo_out) >= size * 2 * 2);  // 2 channels * 2 bytes per sample
@@ -74,5 +75,6 @@ esp_err_t I2S::write(const int16_t* data, size_t size)
         ESP_LOGE(TAG, "Failed to write to I2S buffer %d != %d", bytes_written, size * 2 * 2);
         return ESP_FAIL;
     }
+#endif	
     return ESP_OK;
 }
