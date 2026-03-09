@@ -1,6 +1,7 @@
 idf_component_register(
 	SRCS
 		"main.cpp"
+		"kbd_uart.cpp"
 		"src/C64Emu.cpp"
 		"src/CIA.cpp"
 		"src/CPU6502.cpp"

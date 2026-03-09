@@ -80,7 +80,7 @@ void KonsoolKB::handleKeyPress()
     // Sync menu state with menu draw routine
     display->enableMenuOverlay(menuController->getVisible());
 
-    while (xQueueReceive(input_event_queue, &event, pdMS_TO_TICKS(1))) {
+    if (xQueueReceive(input_event_queue, &event, pdMS_TO_TICKS(1))) {
         // use Keycodes to keep track of pressed keys
         key_code = event.args_scancode.scancode;
         switch (event.type) {
