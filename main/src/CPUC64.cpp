@@ -82,12 +82,12 @@ uint8_t CPUC64::getMem(uint16_t addr) {
         }
         // ** CIA 1 **
         else if (addr <= 0xdcff) {
-#ifdef USE_JOYSTICK			
             kbjoystickmode = menuDataStore->getInt("kb_joystick_port", 0);
             uint8_t ciaidx = (addr - 0xdc00) % 0x10;
             if (ciaidx == 0x00) {
                 uint8_t ddra  = cia1.ciaReg[0x02];
                 uint8_t input = 0xff;
+#ifdef USE_JOYSTICK             
                 if (joystickmode == 2) {
                     // real joystick, but still check for keyboard input
                     input = c64emu->konsoolkb.getdc01(cia1.ciaReg[0x01], true);
@@ -106,10 +106,15 @@ uint8_t CPUC64::getMem(uint16_t addr) {
                     // keyboard
                     input = c64emu->konsoolkb.getdc01(cia1.ciaReg[0x01], true);
                 }
+#else               
+                // keyboard
+                input = c64emu->konsoolkb.getdc01(cia1.ciaReg[0x01], true);
+#endif              
                 return (cia1.ciaReg[0x00] | ~ddra) & input;
             } else if (ciaidx == 0x01) {
                 uint8_t ddrb  = cia1.ciaReg[0x03];
                 uint8_t input = 0xff;
+#ifdef USE_JOYSTICK             
                 if (joystickmode == 2) {
                     // special case: handle fire2 button -> space key
                     if ((cia1.ciaReg[0x00] == 0x7f) && joystick.getFire2()) {
@@ -134,13 +139,13 @@ uint8_t CPUC64::getMem(uint16_t addr) {
                     // keyboard
                     input = c64emu->konsoolkb.getdc01(cia1.ciaReg[0x00], false);
                 }
+#else               
+                // keyboard
+                input = c64emu->konsoolkb.getdc01(cia1.ciaReg[0x00], false);
+#endif              
                 return (cia1.ciaReg[0x01] | ~ddrb) & input;
             }
             return cia1.getCommonCIAReg(ciaidx);
-#else
-            return 0;
-#endif
-			
         }
         // ** CIA 2 **
         else if (addr <= 0xddff) {
@@ -556,7 +561,7 @@ void CPUC64::init(uint8_t* ram, uint8_t* charrom, VIC* vic, C64Emu* c64emu) {
     deactivateCIA2       = false;
     numofcycles          = 0;
     numofcyclespersecond = 0;
-#ifdef USE_JOYSTICK	
+#ifdef USE_JOYSTICK 
     try {
         joystick.init();
     } catch (const JoystickInitializationException& e) {
