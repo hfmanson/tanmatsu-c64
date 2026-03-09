@@ -77,19 +77,17 @@ void setup()
         }
     }
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-    //ESP_LOGI(TAG, "Setup TE refresh interrupt");
-    //ESP_ERROR_CHECK(bsp_display_set_tearing_effect_mode(BSP_DISPLAY_TE_V_BLANKING));
     ESP_LOGI(TAG, "setup done");
 }
 
+extern "C" void my_uart_init();
+
 extern "C" void app_main(void)
 {
-    //SemaphoreHandle_t semaphore      = NULL;
-    SemaphoreHandle_t frameRateMutex = NULL;
-
     // Start the GPIO interrupt service
     gpio_install_isr_service(0);
-
+    my_uart_init();
+    
     // Initialize the Non Volatile Storage service
     esp_err_t res = nvs_flash_init();
     if (res == ESP_ERR_NVS_NO_FREE_PAGES || res == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -104,23 +102,46 @@ extern "C" void app_main(void)
 
    // bsp_display_get_tearing_effect_semaphore(&semaphore);
 
-    float to50hz = 0;
-
     // Get 50Hz frame rate semaphore
-    frameRateMutex = c64Emu.cpu.getFrameRateMutex();
+    SemaphoreHandle_t frameRateMutex = c64Emu.cpu.getFrameRateMutex();
 
     // Main loop outputs C64 screen contents to the display
-    while (true) {
-        // Wait for display refresh signal
-        //xSemaphoreTake(semaphore, 100 / portTICK_PERIOD_MS);
-		vTaskDelay(1);
-        // We only want 50Hz output, so we'll skip some frames
-        if (to50hz > 1.0) {
-			c64Emu.loop();
+    ESP_LOGI(TAG, "Setup TE refresh interrupt");
+    esp_err_t error = bsp_display_set_tearing_effect_mode(BSP_DISPLAY_TE_V_BLANKING);
+    if (error == ESP_ERR_NOT_SUPPORTED) {
+        ESP_LOGI(TAG, "Target does not support bsp_display_set_tearing_effect_mode, use workaround");
+        int64_t interval = 1000000 / 60; // 60 Hz
+        int64_t target = esp_timer_get_time() + interval;
+
+        while (true) {
+            int64_t now = esp_timer_get_time();
+            int64_t wait = target - now;
+            if (wait > 0) {
+                vTaskDelay(pdMS_TO_TICKS(wait / 1000));
+            }
+            target += interval;
+            c64Emu.loop();
             xSemaphoreGive(frameRateMutex);
-            to50hz -= 1.0;
         }
-        // Make sure we always have 50Hz output
-        to50hz += PAL_TO_NTSC_RATIO;
+    } else {
+        ESP_LOGI(TAG, "Target supports bsp_display_set_tearing_effect_mode");
+        SemaphoreHandle_t semaphore;
+        bsp_display_get_tearing_effect_semaphore(&semaphore);
+        float to50hz = 0.0;
+        // Main loop outputs C64 screen contents to the display
+        while (true) {
+            
+            // Wait for display refresh signal
+            xSemaphoreTake(semaphore, 100 / portTICK_PERIOD_MS);
+
+            // We only want 50Hz output, so we'll skip some frames
+            if (to50hz > 1.0) {
+                c64Emu.loop();
+                xSemaphoreGive(frameRateMutex);
+                to50hz -= 1.0;
+            }
+            // Make sure we always have 50Hz output
+            to50hz += PAL_TO_NTSC_RATIO;
+        }       
     }
 }
