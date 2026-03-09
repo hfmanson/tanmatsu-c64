@@ -50,31 +50,31 @@ union MonoToStereo {
 
 esp_err_t I2S::write(const int16_t* data, size_t size)
 {
-#ifdef HFM	
-    size_t          bytes_written;
-    static uint32_t stereo_sample;
-    assert(sizeof(i2s_stereo_out) >= size * 2 * 2);  // 2 channels * 2 bytes per sample
-    static int16_t swapped;
+    if (i2s_handle) {
+        size_t          bytes_written;
+        static uint32_t stereo_sample;
+        assert(sizeof(i2s_stereo_out) >= size * 2 * 2);  // 2 channels * 2 bytes per sample
+        static int16_t swapped;
 
-    for (size_t i = 0; i < size; i++) {
-        // Convert the union to use int16_t to match the data type
-        // swapped = ((uint16_t(data[i]) << 8) & 0xFF00) | ((uint16_t(data[i]) >> 8) & 0x00FF);
-        swapped = data[i];
+        for (size_t i = 0; i < size; i++) {
+            // Convert the union to use int16_t to match the data type
+            // swapped = ((uint16_t(data[i]) << 8) & 0xFF00) | ((uint16_t(data[i]) >> 8) & 0x00FF);
+            swapped = data[i];
 
-        stereo_sample = MonoToStereo{
-            .l = swapped,
-            .r = swapped
-        }.val;
+            stereo_sample = MonoToStereo{
+                .l = swapped,
+                .r = swapped
+            }.val;
 
-        reinterpret_cast<uint32_t*>(i2s_stereo_out)[i] = stereo_sample;
+            reinterpret_cast<uint32_t*>(i2s_stereo_out)[i] = stereo_sample;
+        }
+
+        // size * 2 * 2 because of 2 channels (left and right) and 2 bytes per sample (int16_t)
+        i2s_channel_write(i2s_handle, (uint8_t const*)i2s_stereo_out, size*2*2, &bytes_written, 12);
+        if (bytes_written < size * 2 * 2) {
+            ESP_LOGE(TAG, "Failed to write to I2S buffer %d != %d", bytes_written, size * 2 * 2);
+            return ESP_FAIL;
+        }
     }
-
-    // size * 2 * 2 because of 2 channels (left and right) and 2 bytes per sample (int16_t)
-    i2s_channel_write(i2s_handle, (uint8_t const*)i2s_stereo_out, size*2*2, &bytes_written, 12);
-    if (bytes_written < size * 2 * 2) {
-        ESP_LOGE(TAG, "Failed to write to I2S buffer %d != %d", bytes_written, size * 2 * 2);
-        return ESP_FAIL;
-    }
-#endif	
     return ESP_OK;
 }

@@ -201,7 +201,7 @@ void C64Emu::setup()
     ram = new uint8_t[1 << 16];
 
     // Init I2S
-    //ESP_ERROR_CHECK(i2s.init());
+    i2s.init();
 
     // init VIC
     vic.init(ram, charset_rom, &sid);
