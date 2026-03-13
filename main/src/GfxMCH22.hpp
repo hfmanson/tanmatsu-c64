@@ -22,34 +22,32 @@
 #include "esp_lcd_types.h"
 #include "hal/lcd_types.h"
 #include "pax_types.h"
-// #include <cstdint>
 
-// no elegant/simple solution for max() at compile time in C++11
-// #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+static constexpr uint16_t swap16(uint16_t v) {
+    return (uint16_t)((v >> 8) | (v << 8));
+}
 
 class GfxMCH22 : public DisplayDriver {
    private:
-    static const uint16_t c64_black      = 0x0000;
-    static const uint16_t c64_white      = 0xffff;
-    static const uint16_t c64_red        = 0x8000;
-    static const uint16_t c64_turquoise  = 0xa7fc;
-    static const uint16_t c64_purple     = 0xc218;
-    static const uint16_t c64_green      = 0x064a;
-    static const uint16_t c64_blue       = 0x0014;
-    static const uint16_t c64_yellow     = 0xe74e;
-    static const uint16_t c64_orange     = 0xd42a;
-    static const uint16_t c64_brown      = 0x6200;
-    static const uint16_t c64_lightred   = 0xfbae;
-    static const uint16_t c64_grey1      = 0x3186;
-    static const uint16_t c64_grey2      = 0x73ae;
-    static const uint16_t c64_lightgreen = 0xa7ec;
-    static const uint16_t c64_lightblue  = 0x043f;
-    static const uint16_t c64_grey3      = 0xb5d6;
+    static const uint16_t c64_black      = swap16(0x0000);
+    static const uint16_t c64_white      = swap16(0xffff);
+    static const uint16_t c64_red        = swap16(0x8000);
+    static const uint16_t c64_turquoise  = swap16(0xa7fc);
+    static const uint16_t c64_purple     = swap16(0xc218);
+    static const uint16_t c64_green      = swap16(0x064a);
+    static const uint16_t c64_blue       = swap16(0x0014);
+    static const uint16_t c64_yellow     = swap16(0xe74e);
+    static const uint16_t c64_orange     = swap16(0xd42a);
+    static const uint16_t c64_brown      = swap16(0x6200);
+    static const uint16_t c64_lightred   = swap16(0xfbae);
+    static const uint16_t c64_grey1      = swap16(0x3186);
+    static const uint16_t c64_grey2      = swap16(0x73ae);
+    static const uint16_t c64_lightgreen = swap16(0xa7ec);
+    static const uint16_t c64_lightblue  = swap16(0x043f);
+    static const uint16_t c64_grey3      = swap16(0xb5d6);
 
-    static const uint16_t vic_h_width  = 320 * 2;
-    static const uint16_t vic_v_height = 200 * 2;
-
-    pax_buf_t c64_buf;
+    static const uint16_t vic_h_width  = 320;
+    static const uint16_t vic_v_height = 200;
 
     pax_buf_t                    fb;
     uint16_t*                    raw_fb;
@@ -62,25 +60,13 @@ class GfxMCH22 : public DisplayDriver {
     size_t                       display_v_res;
     uint16_t                     frame_mem_size;
 
-    // Text rendering buffer
-    pax_buf_t buffer;
-
-    const uint16_t c64Colors[16] = {c64_black, c64_white,      c64_red,       c64_turquoise, c64_purple,   c64_green,
-                                    c64_blue,  c64_yellow,     c64_orange,    c64_brown,     c64_lightred, c64_grey1,
-                                    c64_grey2, c64_lightgreen, c64_lightblue, c64_grey3};
+    const uint16_t c64Colors[16] = {
+        c64_black, c64_white,      c64_red,       c64_turquoise, c64_purple,   c64_green,
+        c64_blue,  c64_yellow,     c64_orange,    c64_brown,     c64_lightred, c64_grey1,
+        c64_grey2, c64_lightgreen, c64_lightblue, c64_grey3
+    };
 
     bool menu_overlay_enabled = true;
-
-    inline static void writeCmd(uint8_t cmd) __attribute__((always_inline));
-    inline static void writeData(uint8_t data) __attribute__((always_inline));
-    inline static void copyinit(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h) __attribute__((always_inline));
-    inline static void copycopy(uint16_t data, uint32_t clearMask) __attribute__((always_inline));
-    inline static void copyend() __attribute__((always_inline));
-
-    uint32_t rgb565ToRgb8888(uint16_t rgb565);
-    void     blit(void);
-    void     copyColor(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h, uint16_t data);
-    void     drawMenuOverlay();
 
    public:
     void               init() override;
