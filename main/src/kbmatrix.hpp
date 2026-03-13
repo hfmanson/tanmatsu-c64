@@ -19,8 +19,8 @@ static const KbMatrixEntry kb_matrix[128] = {
     { 0xf7, 0xf7, false},  // 09 : 8
     { 0xef, 0xfe, false},  // 0a : 9
     { 0xef, 0xf7, false},  // 0b : 0
-    { 0xdf, 0xf7, false},  // 0c : -
-    { 0xbf, 0xdf, false},  // 0d : =/+
+    { 0xdf, 0xfe, false},  // 0c : - -> +
+    { 0xdf, 0xf7, false},  // 0d : + -> -
     { 0xfe, 0xfe, false},  // 0e : Backspace
     { 0xff, 0xff, false},  // 0f : Tab
     { 0x7f, 0xbf, false},  // 10 : Q
@@ -33,8 +33,8 @@ static const KbMatrixEntry kb_matrix[128] = {
     { 0xef, 0xfd, false},  // 17 : I
     { 0xef, 0xbf, false},  // 18 : O
     { 0xdf, 0xfd, false},  // 19 : P
-    { 0xff, 0xff, false},  // 1a : [ {
-    { 0xff, 0xff, false},  // 1b : ] }
+    { 0xdf, 0xbf, false},  // 1a : [ { -> @
+    { 0xbf, 0xfd, false},  // 1b : ] } -> *
     { 0xfe, 0xfd, false},  // 1c : Enter
     { 0x7f, 0xfb, false},  // 1d : Ctrl
     { 0xfd, 0xfb, false},  // 1e : A
@@ -46,11 +46,11 @@ static const KbMatrixEntry kb_matrix[128] = {
     { 0xef, 0xfb, false},  // 24 : J
     { 0xef, 0xdf, false},  // 25 : K
     { 0xdf, 0xfb, false},  // 26 : L
-    { 0xff, 0xff, false},  // 27 : ; :
-    { 0xff, 0xff, false},  // 28 : ' "
+    { 0xdf, 0xdf, false},  // 27 : ; -> :
+    { 0xbf, 0xfb, false},  // 28 : ' -> ;
     { 0xff, 0xff, false},  // 29 : ` ~
     { 0xfd, 0x7f, false},  // 2a : LShift
-    { 0xff, 0xff, false},  // 2b : \ |
+    { 0xbf, 0xdf, false},  // 2b : \ -> =
     { 0xfd, 0xef, false},  // 2c : Z
     { 0xfb, 0x7f, false},  // 2d : X
     { 0xfb, 0xef, false},  // 2e : C
