@@ -82,6 +82,20 @@ void setup()
 
 extern "C" void my_uart_init();
 
+static void my_60hz_task(void *arg)
+{
+    const TickType_t period = pdMS_TO_TICKS(1000 / 60);  // ~16 ms
+    TickType_t last_wake = xTaskGetTickCount();
+    SemaphoreHandle_t frameRateMutex = c64Emu.cpu.getFrameRateMutex();
+
+    while (true) {
+        c64Emu.loop();
+        xSemaphoreGive(frameRateMutex);
+
+        vTaskDelayUntil(&last_wake, period);
+    }
+}
+
 extern "C" void app_main(void)
 {
     // Start the GPIO interrupt service
@@ -102,30 +116,30 @@ extern "C" void app_main(void)
 
    // bsp_display_get_tearing_effect_semaphore(&semaphore);
 
-    // Get 50Hz frame rate semaphore
-    SemaphoreHandle_t frameRateMutex = c64Emu.cpu.getFrameRateMutex();
 
     // Main loop outputs C64 screen contents to the display
     ESP_LOGI(TAG, "Setup TE refresh interrupt");
     esp_err_t error = bsp_display_set_tearing_effect_mode(BSP_DISPLAY_TE_V_BLANKING);
     if (error == ESP_ERR_NOT_SUPPORTED) {
         ESP_LOGI(TAG, "Target does not support bsp_display_set_tearing_effect_mode, use workaround");
-        int64_t interval = 1000000 / 60; // 60 Hz
-        int64_t target = esp_timer_get_time() + interval;
-
-        while (true) {
-            int64_t now = esp_timer_get_time();
-            int64_t wait = target - now;
-            if (wait > 0) {
-                vTaskDelay(pdMS_TO_TICKS(wait / 1000));
-            }
-            target += interval;
-            c64Emu.loop();
-            xSemaphoreGive(frameRateMutex);
-        }
+#ifdef USE_DISPLAY_TASK      
+        xTaskCreatePinnedToCore(
+            my_60hz_task,
+            "task_60hz",
+            4096,
+            NULL,
+            5,
+            NULL,
+            1
+        );
+#else
+        my_60hz_task(0);
+#endif  
     } else {
         ESP_LOGI(TAG, "Target supports bsp_display_set_tearing_effect_mode");
         SemaphoreHandle_t semaphore;
+        // Get 50Hz frame rate semaphore
+        SemaphoreHandle_t frameRateMutex = c64Emu.cpu.getFrameRateMutex();
         bsp_display_get_tearing_effect_semaphore(&semaphore);
         float to50hz = 0.0;
         // Main loop outputs C64 screen contents to the display
