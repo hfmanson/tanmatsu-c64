@@ -86,10 +86,11 @@ void KonsoolKB::handleKeyPress()
         switch (event.type) {
             case INPUT_EVENT_TYPE_SCANCODE: {
                 keys_pressed[key_code & 0x7f] = (key_code & 0x80) ? false : true;
-                if (key_code == 0x40) {
+                if (key_code == BSP_INPUT_SCANCODE_F6) {
+                    ESP_LOGI(TAG, "menuController toggle");
                     menuController->toggle();
                 }
-                if (key_code == 0x3f) {  // Switch between joystick port 1 & 2
+                if (key_code == BSP_INPUT_SCANCODE_F5) {  // Switch between joystick port 1 & 2
                     int cur_port = menuDataStore->getInt("kb_joystick_port", 1);
                     menuDataStore->set("kb_joystick_port", cur_port == 1 ? 2 : 1);
                     // TODO: Remove me later
@@ -109,27 +110,27 @@ void KonsoolKB::handleKeyPress()
             repeat_delay++;
             return;
         }
-        if (keys_pressed[0x48]) {  // UP key code
+        if (keys_pressed[BSP_INPUT_SCANCODE_KP8]) {  // UP key code
             ESP_LOGD(TAG, "Handling UP key press");
             menuController->handleInput(MENU_OVERLAY_INPUT_TYPE_UP);
             repeat_delay = 0;
-        } else if (keys_pressed[0x50]) {  // DOWN key code
+        } else if (keys_pressed[BSP_INPUT_SCANCODE_KP2]) {  // DOWN key code
             ESP_LOGD(TAG, "Handling DOWN key press");
             menuController->handleInput(MENU_OVERLAY_INPUT_TYPE_DOWN);
             repeat_delay = 0;
-        } else if (keys_pressed[0x4b]) {  // LEFT key code
+        } else if (keys_pressed[BSP_INPUT_SCANCODE_KP4]) {  // LEFT key code
             ESP_LOGD(TAG, "Handling LEFT key press");
             menuController->handleInput(MENU_OVERLAY_INPUT_TYPE_LEFT);
             repeat_delay = 0;
-        } else if (keys_pressed[0x4d]) {  // RIGHT key code
+        } else if (keys_pressed[BSP_INPUT_SCANCODE_KP6]) {  // RIGHT key code
             ESP_LOGD(TAG, "Handling RIGHT key press");
             menuController->handleInput(MENU_OVERLAY_INPUT_TYPE_RIGHT);
             repeat_delay = 0;
-        } else if (keys_pressed[0x01]) {  // ESC key code
+        } else if (keys_pressed[BSP_INPUT_SCANCODE_ESC]) {  // ESC key code
             ESP_LOGD(TAG, "Handling ESC key press");
             menuController->handleInput(MENU_OVERLAY_INPUT_TYPE_LAST);
             repeat_delay = 0;
-        } else if (keys_pressed[0x1c]) {  // ENTER key code
+        } else if (keys_pressed[BSP_INPUT_SCANCODE_ENTER]) {  // ENTER key code
             ESP_LOGD(TAG, "Handling ENTER key press");
             menuController->handleInput(MENU_OVERLAY_INPUT_TYPE_SELECT);
             repeat_delay = 0;
@@ -138,19 +139,19 @@ void KonsoolKB::handleKeyPress()
         // TODO: Handle joystick input
         virtjoystickvalue = 0xff;
         // Allow UP, DOWN, LEFT, RIGHT, space for fire button
-        if (keys_pressed[0x48]) {  // UP key code
+        if (keys_pressed[BSP_INPUT_SCANCODE_KP8]) {  // UP key code
             virtjoystickvalue = ~(1 << Joystick::C64JOYUP);
         }
-        if (keys_pressed[0x50]) {  // DOWN key code
+        if (keys_pressed[BSP_INPUT_SCANCODE_KP2]) {  // DOWN key code
             virtjoystickvalue &= ~(1 << Joystick::C64JOYDOWN);
         }
-        if (keys_pressed[0x4b]) {  // LEFT key code
+        if (keys_pressed[BSP_INPUT_SCANCODE_KP4]) {  // LEFT key code
             virtjoystickvalue &= ~(1 << Joystick::C64JOYLEFT);
         }
-        if (keys_pressed[0x4d]) {  // RIGHT key code
+        if (keys_pressed[BSP_INPUT_SCANCODE_KP6]) {  // RIGHT key code
             virtjoystickvalue &= ~(1 << Joystick::C64JOYRIGHT);
         }
-        if (keys_pressed[0x2a] || keys_pressed[0x1d]) {  // SHIFT key code
+        if (keys_pressed[BSP_INPUT_SCANCODE_LEFTSHIFT] || keys_pressed[BSP_INPUT_SCANCODE_RIGHTSHIFT]) {  // SHIFT key code
             virtjoystickvalue &= ~(1 << Joystick::C64JOYFIRE);
         }
         // extra keys to make playing platform games easier
@@ -172,7 +173,7 @@ void KonsoolKB::handleKeyPress()
         for (int i = 0; i < 128; i++) {
             // shiftctrlcode = second byte bit 0 -> left shift, bit 1 -> ctrl, bit 2 -> commodore, bit 7 -> external
             // command
-            if (i == 0x42 || i == 0x2a || i == 0x1d || i == 0x5d) {
+            if (i == BSP_INPUT_SCANCODE_F8 || i == BSP_INPUT_SCANCODE_LEFTSHIFT || i == BSP_INPUT_SCANCODE_LEFTCTRL || i == 0x5d) {
                 continue;
             }
             if (keys_pressed[i]) {
@@ -183,10 +184,10 @@ void KonsoolKB::handleKeyPress()
                 sentdc01          = sentdc01 & ent.sentdc01;
             }
         }
-        if (keys_pressed[0x42] || keys_pressed[0x2a]) {
+        if (keys_pressed[BSP_INPUT_SCANCODE_LEFTSHIFT] || keys_pressed[BSP_INPUT_SCANCODE_RIGHTSHIFT]) {
             shiftctrlcode = 1;
         }
-        if (keys_pressed[0x1d]) {
+        if (keys_pressed[BSP_INPUT_SCANCODE_LEFTCTRL]) {
             shiftctrlcode |= 2;
         }
         if (keys_pressed[0x5d]) {
