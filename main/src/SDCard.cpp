@@ -22,9 +22,14 @@
 #include "sd_pwr_ctrl_by_on_chip_ldo.h"
 #include "sdmmc_cmd.h"
 #include "soc/gpio_num.h"
+#ifdef BOARD_KONSOOL
 #include "targets/tanmatsu/tanmatsu_hardware.h"
-
-
+#else /* BOARD_MCH22 */
+#define BSP_SDCARD_CMD 15
+#define BSP_SDCARD_CLK 14
+#define BSP_SDCARD_D0  2
+#define BSP_SDCARD_PWR  19
+#endif
 static const char* TAG = "SDCard";
 
 SDCard::SDCard() : initialized(false) {
@@ -44,8 +49,8 @@ bool SDCard::init() {
 
 
 #if defined(USE_SDCARD)
-
-    // ESP_LOGI(TAG, "Initialize SDCard power");
+#if defined(BOARD_KONSOOL)
+    ESP_LOGI(TAG, "Initialize SDCard power");
 
     sd_pwr_ctrl_ldo_config_t ldo_config = {
         .ldo_chan_id = LDO_UNIT_4,  // SDCard powered by VO4
@@ -60,8 +65,7 @@ bool SDCard::init() {
     host.pwr_ctrl_handle = pwr_ctrl_handle;
 
     vTaskDelay(500 / portTICK_PERIOD_MS);
-
-    ESP_LOGI(TAG, "Setup sdio slot");
+    ESP_LOGI(TAG, "Setup KONSOOL sdio slot");
 
     slot_config.clk    = static_cast<gpio_num_t>(BSP_SDCARD_CLK);
     slot_config.cmd    = static_cast<gpio_num_t>(BSP_SDCARD_CMD);
@@ -71,6 +75,27 @@ bool SDCard::init() {
     slot_config.d3     = static_cast<gpio_num_t>(BSP_SDCARD_D3);
     slot_config.width  = 4;
     slot_config.flags |= SDMMC_SLOT_FLAG_INTERNAL_PULLUP;
+#else
+    ESP_LOGI(TAG, "Setup MCH2022 sdio slot");
+	// Power the SD card
+	gpio_set_direction(static_cast<gpio_num_t>(BSP_SDCARD_PWR), GPIO_MODE_OUTPUT);
+	gpio_set_level(static_cast<gpio_num_t>(BSP_SDCARD_PWR), 1);
+	vTaskDelay(pdMS_TO_TICKS(10));
+	
+	host        = SDMMC_HOST_DEFAULT();
+	host.slot = SDMMC_HOST_SLOT_1;
+	host.flags |= SDMMC_HOST_FLAG_1BIT;
+	
+	slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
+    slot_config.clk    = static_cast<gpio_num_t>(BSP_SDCARD_CLK);
+    slot_config.cmd    = static_cast<gpio_num_t>(BSP_SDCARD_CMD);
+    slot_config.d0     = static_cast<gpio_num_t>(BSP_SDCARD_D0);
+    slot_config.d1     = GPIO_NUM_NC;
+    slot_config.d2     = GPIO_NUM_NC;
+    slot_config.d3     = GPIO_NUM_NC;
+    slot_config.width  = 1;
+
+#endif /* BOARD_KONSOOL */
 
     ESP_LOGI(TAG, "Mounting SDcard");
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
@@ -163,7 +188,7 @@ uint16_t SDCard::load(const char* path, uint8_t* ram, size_t len) {
     uint16_t pos  = addr;
     while (read(fd, &ram[pos], 1) == 1) pos++;
     close(fd);
-    return pos;
+    return addr;
 }
 
 uint16_t SDCard::load_auto(const char* path, uint8_t* ram, size_t len) {
@@ -186,7 +211,7 @@ uint16_t SDCard::load_auto(const char* path, uint8_t* ram, size_t len) {
     uint16_t pos  = addr;
     while (read(fd, &ram[pos], 1) == 1) pos++;
     close(fd);
-    return pos;
+    return addr;
 }
 
 bool SDCard::save(const char* path, const uint8_t* ram, size_t len) {

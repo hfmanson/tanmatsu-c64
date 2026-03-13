@@ -56,10 +56,15 @@ struct Config {
     static const gpio_num_t JOYSTICK_UP       = GPIO_NUM_4;   // MTMS GPIO_4
     static const gpio_num_t JOYSTICK_DOWN     = GPIO_NUM_15;  // SAO_IO1 GPIO_15
     static const gpio_num_t JOYSTICK_FIRE_PIN = GPIO_NUM_13;  // SAO_SCL GPIO_13
+
 #elif defined(BOARD_MCH22)
-#define USE_GFXMCH22
-#define SD_CARD_MOUNT_POINT "/sdcard"
+
+#define USE_SDCARD
+#define SD_CARD_MOUNT_POINT "/sd"
 #define SD_CARD_PRG_PATH SD_CARD_MOUNT_POINT "/c64prg"
+#define USE_GFXMCH22
+#define NEW_COMBINED_WAVEFORMS
+
 #else
 #error No board configuration
 #endif
