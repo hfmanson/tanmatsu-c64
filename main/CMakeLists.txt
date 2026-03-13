@@ -13,7 +13,6 @@ idf_component_register(
 		"src/GfxMCH22.cpp"
 		"src/SDCard.cpp"
 		"src/VIC.cpp"
-		"src/konsoolled.cpp"
 		"src/menuoverlay/MenuController.cpp"
 		"src/menuoverlay/MenuBaseClass.cpp"
 		"src/menuoverlay/mainMenu.cpp"
