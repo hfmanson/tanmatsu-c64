@@ -86,8 +86,8 @@ void LoadMenu::loadPrg(MenuItem* item) {
     ExternalCmds* ext = &c64emu->externalCmds;
 
     // First reset the C64
-    ext->reset();
-    vTaskDelay(3000 / portTICK_PERIOD_MS);  // ~1second
+    //ext->reset();
+    //vTaskDelay(3000 / portTICK_PERIOD_MS);  // ~1second
     // Load the program
     ext->loadPrg(item->title.c_str());
     vTaskDelay(1000 / portTICK_PERIOD_MS);  // ~1second

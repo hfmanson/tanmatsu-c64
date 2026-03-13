@@ -115,11 +115,29 @@ void ExternalCmds::setType5Notification(uint8_t batteryVolLow, uint8_t batteryVo
 }
 
 void ExternalCmds::setVarTab(uint16_t addr) {
-    // set VARTAB
-    ram[0x2d] = addr % 256;
-    ram[0x2e] = addr / 256;
-    // clr
-    c64emu->cpu.setPC(0xa52a);
+    // TXTTAB (start of BASIC program)
+    ram[0x2B] = addr & 0xFF;
+    ram[0x2C] = addr >> 8;
+
+    // Find end of program by scanning BASIC line structure
+    uint16_t p = addr;
+    while (true) {
+        uint16_t next = ram[p] | (ram[p+1] << 8);
+        ESP_LOGI(TAG, "next: %04x", next);
+        if (next == 0) {
+            p += 2;   // end marker
+            break;
+        }
+        p = next;
+    }
+
+    // VARTAB = end of program
+    ram[0x2D] = p & 0xFF;
+    ram[0x2E] = p >> 8;
+
+    // STREND = VARTAB
+    ram[0x2F] = ram[0x2D];
+    ram[0x30] = ram[0x2E];
 }
 
 bool ExternalCmds::loadPrg(const char* filename) {
@@ -128,23 +146,31 @@ bool ExternalCmds::loadPrg(const char* filename) {
     bool     fileloaded   = false;
     bool     error        = false;
     uint16_t addr;
+    uint16_t load_addr = 0;
     if (sdcard.init()) {
         std::string full_name = (std::string("/") + filename + ".prg").c_str();
-        addr                  = sdcard.load(full_name.c_str(), ram);
-        if (addr == 0) {
+        load_addr             = sdcard.load(full_name.c_str(), ram);
+        if (load_addr == 0) {
             ESP_LOGI(TAG, "file not found %s", full_name.c_str());
         } else {
-            setVarTab(addr);
+            setVarTab(load_addr);
             fileloaded = true;
         }
     } else {
         error = true;
-        ESP_LOGI(TAG, "error init sdcard");
-    }
+        ESP_LOGI(TAG, "error loading file from sdcard");
+    }   
+    ESP_LOGI(TAG, "load_addr: %04x", load_addr);
     addr = src_loadactions_prg[0] + (src_loadactions_prg[1] << 8);
     memcpy(ram + addr, src_loadactions_prg + 2, src_loadactions_prg_len - 2);
     if (fileloaded) {
-        c64emu->cpu.exeSubroutine(addr, 1, 0, 0);
+        if (load_addr == 0x0801) {
+            ESP_LOGI(TAG, "BASIC program");
+            //c64emu->cpu.startBasic();
+        } else {
+            ESP_LOGI(TAG, "machine code program");
+            c64emu->cpu.exeSubroutine(addr, 1, 0, 0);
+        }       
     } else if (error) {
         c64emu->cpu.exeSubroutine(addr, 0, 1, 0);
     } else {
