@@ -227,7 +227,7 @@ void C64Emu::setup()
                             "CPU",           // Name of the task
                             10000,           // Stack size in words
                             NULL,            // Task input parameter
-                            19,              // Priority of the task
+                            0,               // Priority of the task
                             &cpuTask,        // Task handle
                             1);              // Core where the task should run
 
