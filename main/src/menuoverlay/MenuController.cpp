@@ -1,6 +1,7 @@
 #include "MenuController.hpp"
 #include <cstring>
 #include <string>
+#include "Config.hpp"
 #include "C64Emu.hpp"
 #include "DisplayDriver.hpp"
 #include "MainMenu.hpp"
@@ -8,6 +9,24 @@
 #include "menuoverlay/MenuDataStore.hpp"
 #include "menuoverlay/MenuTypes.hpp"
 #include "pax_gfx.h"
+
+#if defined(BOARD_MCH22)
+#define TEXT_SIZE 12
+#define LINE_SIZE 7
+#define SCREENSIZE_X 320
+#define SCREENSIZE_Y 200
+#elif defined(BOARD_KONSOOL)
+#define TEXT_SIZE 16
+#define LINE_SIZE 10
+#define SCREENSIZE_X 640
+#define SCREENSIZE_Y 400
+#else
+#error no board configuration
+#endif
+
+#define BLACK 0xff000000
+#define WHITE 0xffffffff
+#define BLUE  0xff0000ff
 
 __attribute__((unused)) static const char* TAG = "MenuController";
 
@@ -26,9 +45,9 @@ void MenuController::init(C64Emu* c64emu)
     DisplayDriver* driver  = c64emu->cpu.vic->getDriver();
     fb                     = driver->getMenuFb();
     // HID Pax framebuffer
-    pax_buf_init(fb, NULL, 640, 400, PAX_BUF_16_565RGB);
+    pax_buf_init(fb, NULL, SCREENSIZE_X, SCREENSIZE_Y, PAX_BUF_16_565RGB);
     pax_buf_reversed(fb, true);
-    pax_background(fb, 0xff000000);
+    pax_background(fb, BLACK);
 
     // Initialize the menus
     rootMenu->init();
@@ -45,16 +64,16 @@ void MenuController::render()
     currentMenu->update();
 
     // Clear the screen
-    pax_background(fb, 0xff000000);
+    pax_background(fb, BLACK);
     // Draw the menu items
-    pax_draw_rect(fb, 0xffffffff, 0, 0, 640, 40);
-    pax_draw_text(fb, 0xff000000, pax_font_sky_mono, 16, 10, 10, currentMenu->getTitle().c_str());
+    pax_draw_rect(fb, WHITE, 0, 0, SCREENSIZE_X, 4 * LINE_SIZE);
+    pax_draw_text(fb, BLACK, pax_font_sky_mono, TEXT_SIZE, LINE_SIZE, LINE_SIZE, currentMenu->getTitle().c_str());
 
     const auto& items = currentMenu->getItems();
     // ESP_LOGI(TAG, "Menu items: %d", items.size());
     size_t      i     = 0;
     for (const auto& item : items) {
-        uint32_t    color = currentMenu->getSelectedItemIndex() == i ? 0xff0000ff : 0xffffffff;
+        uint32_t    color = currentMenu->getSelectedItemIndex() == i ? BLUE : WHITE;
         std::string title;
         switch (item.type) {
             case MenuItemType::TOGGLE: {
@@ -72,7 +91,7 @@ void MenuController::render()
             }
         }
         // ESP_LOGI(TAG, "Menu Item %d: %s", i, title.c_str());
-        pax_draw_text(fb, color, pax_font_sky_mono, 16, 30, 60 + i * 20, title.c_str());
+        pax_draw_text(fb, color, pax_font_sky_mono, TEXT_SIZE, 3 * LINE_SIZE, 6 * LINE_SIZE + i * (2 * LINE_SIZE), title.c_str());
         ++i;
     }
 }
