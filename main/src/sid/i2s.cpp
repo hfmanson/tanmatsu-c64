@@ -15,10 +15,19 @@ extern "C" {
 
 static const char* TAG = "I2S";
 
+bool check_error(const char *function, esp_err_t err)
+{
+	if (err == ESP_ERR_NOT_SUPPORTED) {
+		ESP_LOGI(TAG, "%s not supported", function);
+		return false;
+	}
+	return err != ESP_OK;
+}
+
 esp_err_t I2S::init()
 {
     esp_err_t res = bsp_audio_set_volume(0);
-    if (res != ESP_OK) return res;
+    if (check_error("bsp_audio_set_volume", res)) return res;
     res = bsp_audio_get_i2s_handle(&i2s_handle);
     if (res != ESP_OK) return res;
     res = i2s_channel_disable(i2s_handle);
@@ -28,10 +37,9 @@ esp_err_t I2S::init()
     res = i2s_channel_enable(i2s_handle);
     if (res != ESP_OK) return res;
     res = bsp_audio_set_volume(60);
-    if (res != ESP_OK) return res;
+    if (check_error("bsp_audio_set_volume", res)) return res;
     res = bsp_audio_set_amplifier(false);
-    if (res != ESP_OK) return res;
-
+    if (check_error("bsp_audio_set_amplifier", res)) return res;
     return ESP_OK;
 }
 
